@@ -9,6 +9,7 @@ async function authMiddleware(req, res, next) {
       console.log('🔐 AUTH MIDDLEWARE - REQUEST');
       console.log('='.repeat(70));
       console.log(`📍 Path: ${req.method} ${req.path}`);
+      console.log(`📦 Params:`, req.params);
       console.log(`📦 Query Params:`, req.query);
       
       // ========== AUTHENTICATION ==========
@@ -37,10 +38,13 @@ async function authMiddleware(req, res, next) {
       };
       console.log(`👤 User: ${req.user.name} (${req.user.role}) - ID: ${req.user.id}`);
       
-      // ========== STRUCTURED PARAMS FROM QUERY STRING ==========
-      const { courseId, contentId, moduleId } = req.query;
+      // ========== GET IDs FROM BOTH QUERY PARAMS AND URL PARAMS ==========
+      // Check both query params AND URL params
+      const courseId = req.query.courseId || req.params.courseId || req.params.id;
+      const contentId = req.query.contentId || req.params.contentId || req.params.id;
+      const moduleId = req.query.moduleId || req.params.moduleId;
       
-      console.log(`\n📌 Structured Parameters received:`);
+      console.log(`\n📌 Parameters resolved:`);
       console.log(`   - courseId: ${courseId || '❌ not provided'}`);
       console.log(`   - contentId: ${contentId || '❌ not provided'}`);
       console.log(`   - moduleId: ${moduleId || '❌ not provided'}`);
