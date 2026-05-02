@@ -1,4 +1,5 @@
 .env
-node_modules
-bucket-reset.js
+node_modules/
 temp_videos/
+.DS_Store
+*.log
