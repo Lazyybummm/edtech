@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourseVault | Premium Learning Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f1117 0%, #1a1d26 100%);
+            color: #eef2ff;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1d26; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #818cf8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a78bfa; }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 17, 23, 0.98);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+            padding: 0 32px;
+            z-index: 100;
+        }
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8, #c084fc, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+        .nav-buttons { display: flex; gap: 8px; align-items: center; }
+        .nav-btn {
+            padding: 8px 20px;
+            border-radius: 12px;
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        .nav-btn:hover, .nav-btn.active {
+            background: rgba(129, 140, 248, 0.15);
+            color: #818cf8;
+            transform: translateY(-1px);
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: 20px;
+            padding-left: 20px;
+            border-left: 1px solid rgba(129, 140, 248, 0.2);
+        }
+        .user-name { font-size: 14px; color: #818cf8; font-weight: 500; }
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 6px 12px;
+            border-radius: 10px;
+            color: #f87171;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.2); transform: translateY(-1px); }
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 32px 40px;
+        }
+        .page-header { margin-bottom: 32px; }
+        .page-title { font-size: 36px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(135deg, #fff, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-subtitle { color: #6b7280; font-size: 14px; }
+        .btn-primary {
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(129, 140, 248, 0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-secondary {
+            background: rgba(129, 140, 248, 0.1);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            padding: 8px 16px;
+            border-radius: 10px;
+            color: #818cf8;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover { background: rgba(129, 140, 248, 0.2); transform: translateY(-1px); }
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
+        .action-bar { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+        .stats-row { display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+        .stat-card {
+            background: rgba(26, 29, 38, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 20px;
+            padding: 20px 28px;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover { border-color: rgba(129, 140, 248, 0.4); transform: translateY(-2px); }
+        .stat-number { font-size: 32px; font-weight: 800; color: #818cf8; }
+        .stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 28px;
+        }
+        .course-card {
+            background: rgba(26, 29, 38, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 24px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .course-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(129, 140, 248, 0.5);
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.3);
+        }
+        .course-thumb {
+            height: 160px;
+            background: linear-gradient(135deg, #1e2130, #13151f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+            position: relative;
+        }
+        .course-status {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            font-weight: 500;
+        }
+        .course-body { padding: 20px; }
+        .course-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .course-desc { font-size: 13px; color: #9ca3af; margin-bottom: 16px; line-height: 1.5; }
+        .course-footer { display: flex; justify-content: space-between; font-size: 13px; color: #6b7280; }
+        .enrolled-badge {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .progress-bar {
+            background: rgba(129, 140, 248, 0.2);
+            border-radius: 10px;
+            height: 6px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #818cf8, #a78bfa);
+            border-radius: 10px;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .module-card {
+            background: rgba(19, 21, 31, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(129, 140, 248, 0.15);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .module-card:hover { border-color: rgba(129, 140, 248, 0.3); }
+        .module-header {
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .module-header:hover { background: rgba(24, 27, 36, 0.8); }
+        .module-title { font-size: 16px; font-weight: 600; }
+        .module-content { display: none; padding: 0 24px 20px 60px; border-top: 1px solid rgba(129, 140, 248, 0.15); }
+        .module-content.show { display: block; }
+        .content-item {
+            background: rgba(15, 17, 23, 0.6);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        .content-item:hover { background: rgba(26, 29, 38, 0.8); transform: translateX(4px); }
+        .preview-badge {
+            background: rgba(129, 140, 248, 0.2);
+            color: #818cf8;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-container {
+            background: #1a1d26;
+            border-radius: 28px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid rgba(129, 140, 248, 0.2);
+        }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid rgba(129, 140, 248, 0.15); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 20px; font-weight: 700; }
+        .modal-close { background: none; border: none; color: #9ca3af; font-size: 28px; cursor: pointer; transition: color 0.3s ease; }
+        .modal-close:hover { color: #ef4444; }
+        .modal-body { padding: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 8px; color: #9ca3af; }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: #0f1117;
+            border: 1px solid #2a2f3f;
+            border-radius: 12px;
+            color: #eef2ff;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+        }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; }
+        .checkbox-group input { width: auto; margin: 0; }
+        .upload-zone {
+            border: 2px dashed #2a2f3f;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .upload-zone:hover { border-color: #818cf8; background: rgba(129, 140, 248, 0.05); }
+        .empty-state { text-align: center; padding: 80px; color: #6b7280; }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1e2130;
+            border-radius: 16px;
+            padding: 14px 24px;
+            border-left: 3px solid;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1100;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-left-color: #34d399; }
+        .toast.error { border-left-color: #ef4444; }
+        .toast.warning { border-left-color: #f59e0b; }
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 3px solid #2a2f3f;
+            border-top-color: #818cf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .auth-container {
+            max-width: 440px;
+            margin: 100px auto;
+            background: rgba(26, 29, 38, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 48px;
+            text-align: center;
+            border: 1px solid rgba(129, 140, 248, 0.2);
+        }
+        .auth-tabs { display: flex; gap: 12px; margin-bottom: 32px; }
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            background: #0f1117;
+            border: 1px solid #2a2f3f;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .auth-tab.active {
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+            color: white;
+            border-color: #818cf8;
+        }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #2a2f3f; padding-bottom: 8px; }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .tab-btn.active { background: rgba(129, 140, 248, 0.1); color: #818cf8; }
+        .content-search-list { max-height: 300px; overflow-y: auto; margin-top: 16px; }
+        .search-result-item {
+            background: #0f1117;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .search-result-item:hover { background: #1a1d26; border-color: #818cf8; }
+        
+        /* PDF Viewer Modal */
+        .pdf-viewer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0c10;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+        }
+        .pdf-viewer-modal.show { display: flex; }
+        .pdf-toolbar {
+            background: #111418;
+            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pdf-controls { display: flex; gap: 12px; align-items: center; }
+        .pdf-controls button {
+            background: rgba(129, 140, 248, 0.1);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: #818cf8;
+            cursor: pointer;
+        }
+        .pdf-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .pdf-page { margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); background: white; }
+        .pdf-page canvas { display: block; width: 100%; height: auto; }
+        
+        /* Video Player Modal */
+        .video-viewer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0c10;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+        }
+        .video-viewer-modal.show { display: flex; }
+        .video-toolbar {
+            background: #111418;
+            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .video-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; background: #000; }
+        #hlsVideo { width: 100%; max-width: 1200px; max-height: 85vh; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .video-info { font-size: 14px; color: #9ca3af; }
+        .video-title { font-size: 16px; font-weight: 600; color: #fff; }
+        
+        .blackout-shield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0a0c10;
+            z-index: 2001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .blackout-shield.active { display: flex; }
+        
+        .payment-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .payment-loading.show { display: flex; }
+        
+        .resume-toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e2130;
+            border-radius: 50px;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 2002;
+            border: 1px solid #818cf8;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+        .delete-confirm {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 16px;
+            border-radius: 16px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Payment Loading Overlay -->
+<div class="payment-loading" id="paymentLoading">
+    <div class="spinner"></div>
+    <div style="font-size: 18px; font-weight: 600;">Processing your payment...</div>
+    <div style="font-size: 13px; color: #6b7280;">Please do not close this window</div>
+</div>
+
+<!-- Main App -->
+<div id="app" style="display: none;">
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">⚡ CourseVault</div>
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="switchView('courses')"><i class="fas fa-compass"></i> Explore</button>
+                <button class="nav-btn" onclick="switchView('my-courses')"><i class="fas fa-book-open"></i> My Learning</button>
+                <button class="nav-btn" onclick="switchView('library')"><i class="fas fa-database"></i> Library</button>
+                <div class="user-info">
+                    <span class="user-name" id="userNameDisplay"></span>
+                    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Exit</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container" id="mainContainer">
+        <div class="loading-screen"><div class="spinner"></div><p>Loading amazing content...</p></div>
+    </div>
+</div>
+
+<!-- Auth Container -->
+<div id="authContainer" class="auth-container">
+    <div style="font-size: 48px; margin-bottom: 16px;">⚡</div>
+    <h2 style="margin-bottom: 8px; font-size: 28px;">Welcome to CourseVault</h2>
+    <p style="margin-bottom: 32px; color: #6b7280;">Master new skills with premium courses</p>
+    <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+        <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+    </div>
+    
+    <div id="loginForm">
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="loginEmail" placeholder="student@example.com">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••">
+        </div>
+        <button class="btn-primary" style="width:100%;" onclick="login()">Login →</button>
+        <p style="margin-top: 24px; font-size: 12px; color: #6b7280;">
+            Demo accounts:<br>
+            <span style="color: #818cf8;">Educator:</span> educator@example.com<br>
+            <span style="color: #818cf8;">Student:</span> student@example.com<br>
+            (any password, min 6 chars)
+        </p>
+    </div>
+    
+    <div id="registerForm" style="display: none;">
+        <div class="form-group"><label>Full Name</label><input type="text" id="regName" placeholder="John Doe"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="user@example.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="regPassword" placeholder="•••••• (min 6 chars)"></div>
+        <div class="form-group"><label>I am a</label>
+            <select id="regRole">
+                <option value="student">📚 Student - Looking to learn</option>
+                <option value="educator">🎓 Educator - Want to teach</option>
+            </select>
+        </div>
+        <button class="btn-primary" style="width:100%;" onclick="register()">Create Account →</button>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal" id="courseModal"><div class="modal-container"><div class="modal-header"><h2 id="courseModalTitle">Create Course</h2><button class="modal-close" onclick="closeModal('courseModal')">&times;</button></div><div class="modal-body"><form id="courseForm"><input type="hidden" id="courseId"><div class="form-group"><label>Course Title</label><input type="text" id="courseTitle" required></div><div class="form-group"><label>Description</label><textarea id="courseDescription" rows="3"></textarea></div><div class="form-group"><label>Price (₹)</label><input type="number" id="coursePrice" value="0" step="1"></div><div class="form-group"><label>Status</label><select id="courseStatus"><option value="draft">Draft</option><option value="published">Published</option></select></div><div style="display: flex; gap: 12px; justify-content: flex-end;"><button type="button" class="btn-secondary" onclick="closeModal('courseModal')">Cancel</button><button type="submit" class="btn-primary">Save Course</button></div></form></div></div></div>
+
+<div class="modal" id="moduleModal"><div class="modal-container"><div class="modal-header"><h2>Add Module</h2><button class="modal-close" onclick="closeModal('moduleModal')">&times;</button></div><div class="modal-body"><form id="moduleForm"><input type="hidden" id="moduleId"><input type="hidden" id="moduleCourseId"><div class="form-group"><label>Module Title</label><input type="text" id="moduleTitle" required></div><div class="form-group"><label>Description</label><textarea id="moduleDescription"></textarea></div><div style="display: flex; gap: 12px; justify-content: flex-end;"><button type="button" class="btn-secondary" onclick="closeModal('moduleModal')">Cancel</button><button type="submit" class="btn-primary">Save Module</button></div></form></div></div></div>
+
+<div class="modal" id="contentModal"><div class="modal-container"><div class="modal-header"><h2>Add Content</h2><button class="modal-close" onclick="closeModal('contentModal')">&times;</button></div><div class="modal-body"><div class="tabs"><button class="tab-btn active" onclick="switchContentTab('upload')">📄 Upload PDF</button><button class="tab-btn" onclick="switchContentTab('video')">🎬 Upload Video</button><button class="tab-btn" onclick="switchContentTab('reuse')">📦 Use Existing</button></div>
+<div id="uploadTab"><div class="upload-zone" id="uploadZone"><i class="fas fa-cloud-upload-alt fa-2x"></i><p>Click or drag PDF file</p><input type="file" id="contentFile" accept=".pdf" style="display:none"><div id="selectedFileName" style="margin-top:8px;font-size:12px;color:#818cf8;"></div></div><div class="form-group"><label>Title</label><input type="text" id="contentTitle" required></div><div class="form-group"><label>Description</label><textarea id="contentDescription"></textarea></div><div class="checkbox-group"><input type="checkbox" id="contentPreview"><label>🔓 Make this a free preview (visible to everyone)</label></div><button class="btn-primary" id="uploadBtn" style="width:100%;">Upload & Add</button></div>
+<div id="videoTab" style="display:none;"><div class="upload-zone" id="videoUploadZone"><i class="fas fa-cloud-upload-alt fa-2x"></i><p>Click or drag video (MP4)</p><input type="file" id="videoFile" accept="video/*" style="display:none"><div id="selectedVideoName" style="margin-top:8px;font-size:12px;color:#818cf8;"></div></div><div class="form-group"><label>Title</label><input type="text" id="videoTitleInput" required></div><div class="form-group"><label>Description</label><textarea id="videoDescriptionInput"></textarea></div><div class="checkbox-group"><input type="checkbox" id="videoPreview"><label>🔓 Make this a free preview</label></div><button class="btn-primary" id="uploadVideoBtn" style="width:100%;">Upload & Add</button></div>
+<div id="reuseTab" style="display:none;"><div class="form-group"><label>Search Content</label><input type="text" id="contentSearch" placeholder="Search..." onkeyup="searchExistingContent()"></div><div id="existingContentList" class="content-search-list"><div style="text-align:center;padding:20px;color:#6b7280;">Loading...</div></div></div></div></div></div>
+
+<!-- PDF Viewer -->
+<div class="pdf-viewer-modal" id="pdfViewerModal"><div class="pdf-toolbar"><div><strong id="pdfTitle">Loading...</strong></div><div class="pdf-controls"><button onclick="changePDFPage(-1)" id="prevPageBtn" disabled>← Previous</button><span id="pageNum">1</span> / <span id="pageCount">1</span><button onclick="changePDFPage(1)" id="nextPageBtn" disabled>Next →</button><button onclick="closePDFViewer()">Close</button></div></div><div class="pdf-container" id="pdfContainer"></div></div>
+
+<!-- Video Player -->
+<div class="video-viewer-modal" id="videoViewerModal"><div class="video-toolbar"><div><div class="video-title" id="videoTitle">Loading...</div><div class="video-info" id="videoInfo"></div></div><div><button class="btn-secondary" onclick="closeVideoViewer()"><i class="fas fa-times"></i> Close</button></div></div><div class="video-container" id="videoContainer"><video id="hlsVideo" controls style="width:100%; max-height:80vh;"></video></div></div>
+
+<div class="blackout-shield" id="blackoutShield"><div style="font-size:48px;">🔒</div><div>Content Hidden</div><div style="font-size:12px;">Return to this tab to continue</div></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+const API_BASE = 'http://localhost:3000/api';
+let currentCourseId = null;
+let currentModuleIdForContent = null;
+let selectedFile = null;
+let selectedVideoFile = null;
+let allContents = [];
+let hlsPlayer = null;
+let currentUser = null;
+
+// Video Progress Tracking
+let progressSaveInterval = null;
+let lastSavedPosition = 0;
+let currentVideoElement = null;
+
+// Blackout
+const blackoutShield = document.getElementById('blackoutShield');
+document.addEventListener('visibilitychange', () => { document.hidden ? blackoutShield.classList.add('active') : blackoutShield.classList.remove('active'); });
+window.addEventListener('blur', () => blackoutShield.classList.add('active'));
+window.addEventListener('focus', () => blackoutShield.classList.remove('active'));
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-exclamation-circle'}"></i><span>${message}</span>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+async function fetchAPI(endpoint, options = {}) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
+            ...options.headers
+        }
+    });
+    if (!response.ok) {
+        if (response.status === 401) { logout(); throw new Error('Session expired'); }
+        const error = await response.json();
+        throw new Error(error.error || 'Request failed');
+    }
+    return response.json();
+}
+
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
+function formatSize(bytes) { if (!bytes) return '0 B'; if (bytes < 1024) return bytes + ' B'; if (bytes < 1024*1024) return (bytes/1024).toFixed(1)+' KB'; return (bytes/(1024*1024)).toFixed(1)+' MB'; }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ==================== AUTH ====================
+function switchAuthTab(tab) {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const tabs = document.querySelectorAll('.auth-tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    if (tab === 'login') { loginForm.style.display = 'block'; registerForm.style.display = 'none'; tabs[0].classList.add('active'); }
+    else { loginForm.style.display = 'none'; registerForm.style.display = 'block'; tabs[1].classList.add('active'); }
+}
+
+async function login() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { showToast('Please enter email and password', 'error'); return; }
+    try {
+        const response = await fetch(`${API_BASE}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+        const data = await response.json();
+        if (data.success) {
+            localStorage.setItem('token', data.token);
+            currentUser = data.user;
+            document.getElementById('userNameDisplay').innerHTML = `<i class="fas fa-user-circle"></i> ${data.user.name} (${data.user.role})`;
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            showToast(`Welcome back, ${data.user.name}!`);
+            loadCourses();
+        } else { showToast(data.error || 'Login failed', 'error'); }
+    } catch (error) { showToast('Login failed: ' + error.message, 'error'); }
+}
+
+async function register() {
+    const name = document.getElementById('regName').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+    const role = document.getElementById('regRole').value;
+    if (!name || !email || !password) { showToast('Please fill all fields', 'error'); return; }
+    if (password.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
+    try {
+        const response = await fetch(`${API_BASE}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, password, role }) });
+        const data = await response.json();
+        if (data.success) {
+            localStorage.setItem('token', data.token);
+            currentUser = data.user;
+            document.getElementById('userNameDisplay').innerHTML = `<i class="fas fa-user-circle"></i> ${data.user.name} (${data.user.role})`;
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            showToast(`Welcome, ${data.user.name}!`);
+            loadCourses();
+        } else { showToast(data.error || 'Registration failed', 'error'); }
+    } catch (error) { showToast('Registration failed: ' + error.message, 'error'); }
+}
+
+function logout() {
+    localStorage.removeItem('token');
+    currentUser = null;
+    stopVideoProgress();
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('authContainer').style.display = 'block';
+    showToast('Logged out successfully');
+}
+
+// Check login status
+if (localStorage.getItem('token')) {
+    document.getElementById('authContainer').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    fetchAPI('/auth/me').then(data => {
+        currentUser = data.user;
+        document.getElementById('userNameDisplay').innerHTML = `<i class="fas fa-user-circle"></i> ${data.user.name} (${data.user.role})`;
+        loadCourses();
+    }).catch(() => logout());
+} else {
+    document.getElementById('authContainer').style.display = 'block';
+    document.getElementById('app').style.display = 'none';
+}
+
+// ==================== VIDEO PROGRESS TRACKING ====================
+async function saveVideoProgress(contentId, courseId, position) {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        await fetch(`${API_BASE}/video/progress`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ contentId, courseId, position: Math.floor(position) })
+        });
+    } catch (error) { console.error('Save progress failed:', error); }
+}
+
+async function getVideoProgress(contentId) {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+        const response = await fetch(`${API_BASE}/video/progress/${contentId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) { return null; }
+}
+
+function startVideoProgress(video, contentId, courseId) {
+    stopVideoProgress();
+    lastSavedPosition = 0;
+    progressSaveInterval = setInterval(async () => {
+        if (video && !video.paused && video.currentTime) {
+            const currentTime = video.currentTime;
+            if (Math.abs(currentTime - lastSavedPosition) >= 10) {
+                lastSavedPosition = currentTime;
+                await saveVideoProgress(contentId, courseId, currentTime);
+            }
+        }
+    }, 5000);
+}
+
+function stopVideoProgress() {
+    if (progressSaveInterval) { clearInterval(progressSaveInterval); progressSaveInterval = null; }
+}
+
+// ==================== ENROLLMENT ====================
+async function enrollInCourse(courseId) {
+    if (!localStorage.getItem('token')) { showToast('Please login to enroll', 'error'); return; }
+    try {
+        const statusData = await fetchAPI(`/enrollments/status/${courseId}`);
+        if (statusData.enrolled) { showToast('You are already enrolled!', 'success'); viewCourse(courseId); return; }
+        if (statusData.status === 'pending') { showToast('Payment in progress...', 'warning'); return; }
+    } catch (error) {}
+    
+    const enrollBtn = document.querySelector('#enrollBtn');
+    if (enrollBtn) enrollBtn.disabled = true;
+    try {
+        showToast('Creating secure payment...', 'success');
+        const orderData = await fetchAPI('/payments/create-order', { method: 'POST', body: JSON.stringify({ courseId }) });
+        
+        const options = {
+            key: orderData.keyId, amount: Math.round(orderData.amount * 100), currency: orderData.currency,
+            name: "CourseVault", description: orderData.courseTitle, order_id: orderData.orderId,
+            prefill: { name: currentUser?.name || "", email: currentUser?.email || "" },
+            theme: { color: "#818cf8" },
+            modal: { ondismiss: () => { showToast('Payment cancelled', 'error'); if (enrollBtn) enrollBtn.disabled = false; } },
+            handler: async function(response) {
+                document.getElementById('paymentLoading').classList.add('show');
+                try {
+                    const verifyData = await fetchAPI('/payments/verify', {
+                        method: 'POST',
+                        body: JSON.stringify({ orderId: orderData.orderId, paymentId: response.razorpay_payment_id, signature: response.razorpay_signature, courseId })
+                    });
+                    if (verifyData.success) { showToast('Enrolled successfully!', 'success'); setTimeout(() => viewCourse(courseId), 1500); }
+                    else if (verifyData.alreadyEnrolled) { showToast('Already enrolled!', 'success'); setTimeout(() => viewCourse(courseId), 1000); }
+                    else { showToast(verifyData.error || 'Verification failed', 'error'); }
+                } catch (error) { showToast('Verification failed', 'error'); }
+                finally { document.getElementById('paymentLoading').classList.remove('show'); if (enrollBtn) enrollBtn.disabled = false; }
+            }
+        };
+        const razorpay = new Razorpay(options);
+        razorpay.on('payment.failed', () => { document.getElementById('paymentLoading').classList.remove('show'); showToast('Payment failed', 'error'); if (enrollBtn) enrollBtn.disabled = false; });
+        razorpay.open();
+    } catch (error) { showToast(error.message || 'Enrollment failed', 'error'); if (enrollBtn) enrollBtn.disabled = false; }
+}
+
+// ==================== PDF FUNCTIONS ====================
+let currentPDFDoc = null, currentPageNum = 1, totalPages = 0;
+function closePDFViewer() { document.getElementById('pdfViewerModal').classList.remove('show'); currentPDFDoc = null; }
+async function previewPDF(contentId, title) {
+    document.getElementById('pdfTitle').innerText = title;
+    document.getElementById('pdfContainer').innerHTML = '<div class="loading-screen"><div class="spinner"></div><p>Loading PDF...</p></div>';
+    document.getElementById('pdfViewerModal').classList.add('show');
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/content/${contentId}/pdf`, { headers: { 'Authorization': token ? `Bearer ${token}` : '' } });
+        if (!response.ok) throw new Error('Failed to load PDF');
+        const pdfData = await response.arrayBuffer();
+        currentPDFDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+        totalPages = currentPDFDoc.numPages;
+        document.getElementById('pageCount').innerText = totalPages;
+        document.getElementById('prevPageBtn').disabled = true;
+        document.getElementById('nextPageBtn').disabled = totalPages <= 1;
+        currentPageNum = 1;
+        await renderPDFPage(currentPageNum);
+        document.getElementById('pageNum').innerText = currentPageNum;
+    } catch (error) { document.getElementById('pdfContainer').innerHTML = `<div style="text-align:center;padding:40px;color:#ef4444;">Failed to load PDF: ${error.message}</div>`; }
+}
+async function renderPDFPage(pageNum) {
+    if (!currentPDFDoc) return;
+    const page = await currentPDFDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 1.5 });
+    const container = document.getElementById('pdfContainer');
+    const canvas = document.createElement('canvas');
+    canvas.id = `pdf-canvas-${pageNum}`;
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'pdf-page';
+    wrapper.appendChild(canvas);
+    container.appendChild(wrapper);
+    const context = canvas.getContext('2d');
+    await page.render({ canvasContext: context, viewport }).promise;
+    canvas.scrollIntoView({ behavior: 'smooth' });
+}
+async function changePDFPage(delta) {
+    const newPage = currentPageNum + delta;
+    if (newPage < 1 || newPage > totalPages) return;
+    currentPageNum = newPage;
+    await renderPDFPage(currentPageNum);
+    document.getElementById('pageNum').innerText = currentPageNum;
+    document.getElementById('prevPageBtn').disabled = currentPageNum <= 1;
+    document.getElementById('nextPageBtn').disabled = currentPageNum >= totalPages;
+}
+
+// ==================== VIDEO FUNCTIONS WITH PROGRESS ====================
+function closeVideoViewer() {
+    stopVideoProgress();
+    if (hlsPlayer) { hlsPlayer.destroy(); hlsPlayer = null; }
+    document.getElementById('videoViewerModal').classList.remove('show');
+    const video = document.getElementById('hlsVideo');
+    if (video) video.pause();
+}
+
+async function previewVideo(contentId, title) {
+    document.getElementById('videoTitle').innerText = title;
+    document.getElementById('videoInfo').innerText = 'Loading...';
+    document.getElementById('videoViewerModal').classList.add('show');
+    const videoContainer = document.getElementById('videoContainer');
+    videoContainer.innerHTML = '<div class="loading-screen"><div class="spinner"></div><p>Loading video...</p></div>';
+    
+    try {
+        const token = localStorage.getItem('token');
+        const streamRes = await fetch(`${API_BASE}/content/${contentId}/stream`, {
+            headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+        });
+        const streamData = await streamRes.json();
+        
+        if (streamData.status === 'processing') {
+            videoContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="spinner"></div><p>Video is processing...</p></div>';
+            return;
+        }
+        if (!streamData.hlsUrl) {
+            videoContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;">Video not ready</div>';
+            return;
+        }
+        
+        const savedProgress = await getVideoProgress(contentId);
+        const resumePosition = (savedProgress && savedProgress.hasProgress && savedProgress.position > 0) ? savedProgress.position : 0;
+        
+        videoContainer.innerHTML = '<video id="hlsVideo" controls style="width:100%; max-height:80vh;"></video>';
+        const newVideo = document.getElementById('hlsVideo');
+        currentVideoElement = newVideo;
+        
+        const onVideoReady = () => {
+            if (resumePosition > 0 && resumePosition < newVideo.duration - 5) {
+                newVideo.currentTime = resumePosition;
+                const minutes = Math.floor(resumePosition / 60);
+                const seconds = Math.floor(resumePosition % 60);
+                showToast(`Resuming from ${minutes}:${seconds.toString().padStart(2, '0')}`, 'success');
+            }
+            startVideoProgress(newVideo, contentId, currentCourseId);
+            newVideo.play().catch(e => console.log('Autoplay prevented'));
+        };
+        
+        if (Hls.isSupported()) {
+            if (hlsPlayer) hlsPlayer.destroy();
+            hlsPlayer = new Hls();
+            const absoluteHlsUrl = streamData.hlsUrl.startsWith('http') ? streamData.hlsUrl : `http://localhost:3000${streamData.hlsUrl}`;
+            hlsPlayer.loadSource(absoluteHlsUrl);
+            hlsPlayer.attachMedia(newVideo);
+            hlsPlayer.on(Hls.Events.MANIFEST_PARSED, onVideoReady);
+        } else if (newVideo.canPlayType('application/vnd.apple.mpegurl')) {
+            newVideo.src = streamData.hlsUrl;
+            newVideo.addEventListener('loadedmetadata', onVideoReady);
+        }
+        
+        newVideo.addEventListener('ended', async () => {
+            await saveVideoProgress(contentId, currentCourseId, newVideo.duration);
+            stopVideoProgress();
+        });
+        
+        document.getElementById('videoInfo').innerText = streamData.duration ? `Duration: ${Math.floor(streamData.duration / 60)}:${(streamData.duration % 60).toString().padStart(2, '0')}` : '';
+        
+    } catch (error) {
+        console.error('Video error:', error);
+        videoContainer.innerHTML = `<div style="text-align:center;padding:40px;color:#ef4444;">Failed to load video: ${error.message}</div>`;
+    }
+}
+
+// ==================== CONTENT REUSE ====================
+function switchContentTab(tab) {
+    document.getElementById('uploadTab').style.display = tab === 'upload' ? 'block' : 'none';
+    document.getElementById('videoTab').style.display = tab === 'video' ? 'block' : 'none';
+    document.getElementById('reuseTab').style.display = tab === 'reuse' ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.remove('active');
+        if ((tab === 'upload' && i === 0) || (tab === 'video' && i === 1) || (tab === 'reuse' && i === 2)) btn.classList.add('active');
+    });
+    if (tab === 'reuse') loadExistingContent();
+}
+async function loadExistingContent() {
+    try { const data = await fetchAPI('/content'); allContents = data.contents || []; searchExistingContent(); }
+    catch (error) { document.getElementById('existingContentList').innerHTML = '<div style="text-align:center;padding:20px;color:#ef4444;">Failed to load</div>'; }
+}
+function searchExistingContent() {
+    const searchTerm = document.getElementById('contentSearch').value.toLowerCase();
+    const filtered = allContents.filter(c => c.title.toLowerCase().includes(searchTerm));
+    const container = document.getElementById('existingContentList');
+    if (filtered.length === 0) { container.innerHTML = '<div style="text-align:center;padding:20px;color:#6b7280;">No content found</div>'; return; }
+    container.innerHTML = filtered.map(c => `<div class="search-result-item" onclick="addExistingContent('${c.id}', '${escapeHtml(c.title)}')"><div><h4>${escapeHtml(c.title)}</h4><p><i class="fas ${c.content_type === 'video' ? 'fa-video' : 'fa-file-pdf'}"></i> ${c.content_type.toUpperCase()} • ${formatSize(c.file_size_bytes)}</p></div><span>Select →</span></div>`).join('');
+}
+async function addExistingContent(contentId, title) {
+    if (!confirm(`Add "${title}" to this module?`)) return;
+    try {
+        await fetchAPI(`/modules/${currentModuleIdForContent}/content`, { method: 'POST', body: JSON.stringify({ content_id: contentId }) });
+        showToast(`"${title}" added`);
+        closeModal('contentModal');
+        viewCourse(currentCourseId);
+    } catch (error) { showToast('Failed to add content', 'error'); }
+}
+
+// ==================== COURSE CRUD ====================
+async function loadCourses() {
+    document.getElementById('mainContainer').innerHTML = '<div class="loading-screen"><div class="spinner"></div><p>Loading courses...</p></div>';
+    try {
+        const data = await fetchAPI('/courses');
+        renderCourses(data.courses || []);
+    } catch (error) {
+        document.getElementById('mainContainer').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p><button class="btn-primary" onclick="loadCourses()">Retry</button></div>';
+    }
+}
+
+function renderCourses(courses) {
+    const container = document.getElementById('mainContainer');
+    const published = courses.filter(c => c.status === 'published').length;
+    container.innerHTML = `
+        <div class="page-header"><h1 class="page-title">Explore Courses</h1><p class="page-subtitle">Discover amazing content from expert educators</p></div>
+        <div class="stats-row"><div class="stat-card"><div class="stat-number">${courses.length}</div><div class="stat-label">Total Courses</div></div>
+        <div class="stat-card"><div class="stat-number">${published}</div><div class="stat-label">Published</div></div></div>
+        <div class="action-bar"><button class="btn-primary" onclick="openCourseModal()"><i class="fas fa-plus"></i> Create Course</button></div>
+        <div class="courses-grid" id="coursesGrid"></div>
+    `;
+    const grid = document.getElementById('coursesGrid');
+    if (courses.length === 0) grid.innerHTML = '<div class="empty-state"><i class="fas fa-graduation-cap"></i><p>No courses yet. Create your first course!</p></div>';
+    else grid.innerHTML = courses.map(c => `
+        <div class="course-card" onclick="viewCourse('${c.id}')">
+            <div class="course-thumb"><i class="fas fa-book-open"></i><span class="course-status">${c.status}</span></div>
+            <div class="course-body">
+                <div class="course-title">${escapeHtml(c.title)}</div>
+                <div class="course-desc">${escapeHtml(c.description?.substring(0, 100) || 'No description')}</div>
+                <div class="course-footer"><span>${c.price > 0 ? '₹' + c.price : 'Free'}</span><span>by ${escapeHtml(c.educator_name)}</span></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadMyCourses() {
+    document.getElementById('mainContainer').innerHTML = '<div class="loading-screen"><div class="spinner"></div><p>Loading your courses...</p></div>';
+    try {
+        const data = await fetchAPI('/my-courses');
+        renderMyCourses(data.courses || []);
+    } catch (error) {
+        document.getElementById('mainContainer').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>Failed to load</p></div>';
+    }
+}
+
+function renderMyCourses(courses) {
+    const container = document.getElementById('mainContainer');
+    container.innerHTML = `
+        <div class="page-header"><h1 class="page-title">My Learning</h1><p class="page-subtitle">Continue where you left off</p></div>
+        <div class="courses-grid" id="coursesGrid"></div>
+    `;
+    const grid = document.getElementById('coursesGrid');
+    if (courses.length === 0) grid.innerHTML = '<div class="empty-state"><i class="fas fa-book"></i><p>No courses yet. Browse and enroll!</p></div>';
+    else grid.innerHTML = courses.map(c => `
+        <div class="course-card" onclick="viewCourse('${c.id}')">
+            <div class="course-thumb"><i class="fas fa-book-open"></i><span class="course-status">${c.status}</span></div>
+            <div class="course-body">
+                <div class="course-title">${escapeHtml(c.title)}</div>
+                <div class="course-desc">${escapeHtml(c.description?.substring(0, 100) || 'No description')}</div>
+                <div class="progress-bar"><div class="progress-fill" style="width: ${c.progress || 0}%"></div></div>
+                <div class="course-footer"><span>${c.progress || 0}% Complete</span><span>by ${escapeHtml(c.educator_name)}</span></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function viewCourse(courseId) {
+    currentCourseId = courseId;
+    document.getElementById('mainContainer').innerHTML = '<div class="loading-screen"><div class="spinner"></div><p>Loading course content...</p></div>';
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/courses/${courseId}`, {
+            headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+        });
+        const data = await response.json();
+        renderCourseDetail(data.course, data.modules);
+    } catch (error) {
+        document.getElementById('mainContainer').innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p><button class="btn-primary" onclick="viewCourse(\'' + courseId + '\')">Retry</button></div>';
+    }
+}
+
+function renderCourseDetail(course, modules) {
+    const container = document.getElementById('mainContainer');
+    container.innerHTML = `
+        <div><button class="btn-secondary" onclick="loadCourses()"><i class="fas fa-arrow-left"></i> Back to Courses</button></div>
+        <div class="page-header">
+            <h1 class="page-title">${escapeHtml(course.title)}</h1>
+            <p class="page-subtitle">${escapeHtml(course.description || 'No description')}</p>
+            ${course.isEnrolled ? '<span class="enrolled-badge"><i class="fas fa-check-circle"></i> Enrolled</span>' : ''}
+            ${course.isCreator ? '<span class="enrolled-badge" style="background:rgba(129,140,248,0.2);color:#818cf8;"><i class="fas fa-edit"></i> Course Creator</span>' : ''}
+        </div>
+        ${!course.isEnrolled && !course.isCreator && course.status === 'published' && course.price > 0 ? 
+            `<div class="action-bar"><button class="btn-primary" id="enrollBtn" onclick="enrollInCourse('${course.id}')"><i class="fas fa-rupee-sign"></i> Enroll Now - ₹${course.price}</button></div>` : ''}
+        ${!course.isEnrolled && !course.isCreator && course.status === 'published' && course.price === 0 ? 
+            `<div class="action-bar"><button class="btn-primary" id="enrollBtn" onclick="enrollInCourse('${course.id}')"><i class="fas fa-graduation-cap"></i> Enroll Now (Free)</button></div>` : ''}
+        ${course.isCreator ? `<div class="action-bar"><button class="btn-primary" onclick="openModuleModal('${course.id}')"><i class="fas fa-plus"></i> Add Module</button><button class="btn-secondary" onclick="openCourseModal('${course.id}')"><i class="fas fa-edit"></i> Edit Course</button><button class="btn-secondary btn-danger" onclick="deleteCourse('${course.id}')"><i class="fas fa-trash"></i> Delete</button></div>` : ''}
+        <div id="modulesContainer"></div>
+    `;
+    
+    const modulesContainer = document.getElementById('modulesContainer');
+    if (modules.length === 0) modulesContainer.innerHTML = '<div class="empty-state"><i class="fas fa-layer-group"></i><p>No modules yet</p></div>';
+    else modulesContainer.innerHTML = modules.map(m => `
+        <div class="module-card">
+            <div class="module-header" onclick="toggleModule('${m.id}')">
+                <div class="module-title"><i class="fas fa-folder"></i> ${escapeHtml(m.title)}</div>
+                <div class="module-actions">
+                    ${course.isCreator ? `<button class="btn-secondary" style="padding:4px 10px;" onclick="event.stopPropagation(); openAddContentModal('${m.id}')"><i class="fas fa-plus"></i> Add</button>
+                    <button class="btn-secondary" style="padding:4px 10px;" onclick="event.stopPropagation(); openModuleModal('${course.id}', '${m.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-secondary btn-danger" style="padding:4px 10px;" onclick="event.stopPropagation(); deleteModule('${m.id}')"><i class="fas fa-trash"></i></button>` : ''}
+                </div>
+            </div>
+            <div class="module-content" id="module-content-${m.id}">
+                <div id="content-list-${m.id}"></div>
+            </div>
+        </div>
+    `).join('');
+    
+    for (const module of modules) {
+        const contentList = document.getElementById(`content-list-${module.id}`);
+        if (!module.contents || module.contents.length === 0) {
+            contentList.innerHTML = '<div style="padding:16px;text-align:center;color:#6b7280;">No content in this module</div>';
+        } else {
+            contentList.innerHTML = module.contents.map(c => `
+                <div class="content-item">
+                    <div><i class="fas ${c.content_type === 'video' ? 'fa-video' : 'fa-file-pdf'}"></i> <strong>${escapeHtml(c.title)}</strong>${c.preview ? '<span class="preview-badge">PREVIEW</span>' : ''}<br><small>${c.file_name || ''} • ${formatSize(c.file_size_bytes)}</small></div>
+                    <button class="btn-secondary view-content-btn" data-id="${c.id}" data-title="${escapeHtml(c.title)}" data-type="${c.content_type}">${c.content_type === 'video' ? '<i class="fas fa-play"></i> Watch' : '<i class="fas fa-eye"></i> View'}</button>
+                </div>
+            `).join('');
+            
+            contentList.querySelectorAll('.view-content-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const type = btn.dataset.type;
+                    const id = btn.dataset.id;
+                    const title = btn.dataset.title;
+                    if (type === 'video') previewVideo(id, title);
+                    else previewPDF(id, title);
+                });
+            });
+        }
+    }
+}
+
+function toggleModule(moduleId) {
+    const el = document.getElementById(`module-content-${moduleId}`);
+    if (el) el.classList.toggle('show');
+}
+
+function openCourseModal(courseId = null) {
+    if (courseId) {
+        document.getElementById('courseModalTitle').innerText = 'Edit Course';
+        fetchAPI(`/courses/${courseId}`).then(data => {
+            document.getElementById('courseId').value = data.course.id;
+            document.getElementById('courseTitle').value = data.course.title;
+            document.getElementById('courseDescription').value = data.course.description || '';
+            document.getElementById('coursePrice').value = data.course.price || 0;
+            document.getElementById('courseStatus').value = data.course.status || 'draft';
+        });
+    } else {
+        document.getElementById('courseModalTitle').innerText = 'Create Course';
+        document.getElementById('courseForm').reset();
+        document.getElementById('courseId').value = '';
+    }
+    document.getElementById('courseModal').classList.add('show');
+}
+
+document.getElementById('courseForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const courseId = document.getElementById('courseId').value;
+    const data = { title: document.getElementById('courseTitle').value, description: document.getElementById('courseDescription').value, price: parseFloat(document.getElementById('coursePrice').value) || 0, status: document.getElementById('courseStatus').value };
+    try {
+        if (courseId) { await fetchAPI(`/courses/${courseId}`, { method: 'PUT', body: JSON.stringify(data) }); showToast('Course updated'); }
+        else { await fetchAPI('/courses', { method: 'POST', body: JSON.stringify(data) }); showToast('Course created!'); }
+        closeModal('courseModal');
+        loadCourses();
+    } catch (error) { showToast('Error', 'error'); }
+});
+
+async function deleteCourse(courseId) {
+    if (!confirm('⚠️ Delete this course? All modules and content will be removed. This cannot be undone.')) return;
+    try {
+        await fetchAPI(`/courses/${courseId}`, { method: 'DELETE' });
+        showToast('Course deleted successfully');
+        loadCourses();
+    } catch (error) { showToast('Delete failed', 'error'); }
+}
+
+function openModuleModal(courseId, moduleId = null) {
+    document.getElementById('moduleCourseId').value = courseId;
+    if (moduleId) {
+        document.querySelector('#moduleModal h2').innerText = 'Edit Module';
+        document.getElementById('moduleId').value = moduleId;
+        fetchAPI(`/modules/${moduleId}`).then(data => {
+            document.getElementById('moduleTitle').value = data.module.title;
+            document.getElementById('moduleDescription').value = data.module.description || '';
+        });
+    } else {
+        document.querySelector('#moduleModal h2').innerText = 'Add Module';
+        document.getElementById('moduleForm').reset();
+        document.getElementById('moduleId').value = '';
+    }
+    document.getElementById('moduleModal').classList.add('show');
+}
+
+document.getElementById('moduleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const moduleId = document.getElementById('moduleId').value;
+    const data = { course_id: document.getElementById('moduleCourseId').value, title: document.getElementById('moduleTitle').value, description: document.getElementById('moduleDescription').value };
+    try {
+        if (moduleId) { await fetchAPI(`/modules/${moduleId}`, { method: 'PUT', body: JSON.stringify(data) }); showToast('Module updated'); }
+        else { await fetchAPI('/modules', { method: 'POST', body: JSON.stringify(data) }); showToast('Module added'); }
+        closeModal('moduleModal');
+        viewCourse(currentCourseId);
+    } catch (error) { showToast('Error', 'error'); }
+});
+
+async function deleteModule(moduleId) {
+    if (!confirm('⚠️ Delete this module? All content will be removed.')) return;
+    try {
+        await fetchAPI(`/modules/${moduleId}`, { method: 'DELETE' });
+        showToast('Module deleted');
+        viewCourse(currentCourseId);
+    } catch (error) { showToast('Delete failed', 'error'); }
+}
+
+function openAddContentModal(moduleId) {
+    currentModuleIdForContent = moduleId;
+    document.getElementById('contentFile').value = '';
+    document.getElementById('videoFile').value = '';
+    document.getElementById('selectedFileName').innerHTML = '';
+    document.getElementById('selectedVideoName').innerHTML = '';
+    document.getElementById('contentTitle').value = '';
+    document.getElementById('contentDescription').value = '';
+    document.getElementById('videoTitleInput').value = '';
+    document.getElementById('videoDescriptionInput').value = '';
+    document.getElementById('contentPreview').checked = false;
+    document.getElementById('videoPreview').checked = false;
+    document.getElementById('contentModal').classList.add('show');
+}
+
+// Upload Handlers
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('contentFile');
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('drop', (e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file.type === 'application/pdf') { selectedFile = file; document.getElementById('selectedFileName').innerHTML = file.name; } else showToast('Only PDF files', 'error'); });
+fileInput.addEventListener('change', () => { if (fileInput.files[0]?.type === 'application/pdf') { selectedFile = fileInput.files[0]; document.getElementById('selectedFileName').innerHTML = selectedFile.name; } });
+
+document.getElementById('uploadBtn').addEventListener('click', async () => {
+    if (!selectedFile) { showToast('Select a PDF file', 'error'); return; }
+    const title = document.getElementById('contentTitle').value.trim();
+    if (!title) { showToast('Enter title', 'error'); return; }
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('title', title);
+    formData.append('description', document.getElementById('contentDescription').value);
+    formData.append('content_type', 'pdf');
+    formData.append('preview', document.getElementById('contentPreview').checked);
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/content/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+        const data = await response.json();
+        if (data.success) {
+            await fetchAPI(`/modules/${currentModuleIdForContent}/content`, { method: 'POST', body: JSON.stringify({ content_id: data.content.id }) });
+            showToast('PDF added');
+            closeModal('contentModal');
+            viewCourse(currentCourseId);
+        }
+    } catch (error) { showToast('Upload failed', 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = 'Upload PDF & Add'; }
+});
+
+const videoUploadZone = document.getElementById('videoUploadZone');
+const videoFileInput = document.getElementById('videoFile');
+videoUploadZone.addEventListener('click', () => videoFileInput.click());
+videoUploadZone.addEventListener('drop', (e) => { e.preventDefault(); selectedVideoFile = e.dataTransfer.files[0]; document.getElementById('selectedVideoName').innerHTML = selectedVideoFile.name; });
+videoFileInput.addEventListener('change', () => { selectedVideoFile = videoFileInput.files[0]; document.getElementById('selectedVideoName').innerHTML = selectedVideoFile.name; });
+
+document.getElementById('uploadVideoBtn').addEventListener('click', async () => {
+    if (!selectedVideoFile) { showToast('Select a video file', 'error'); return; }
+    const title = document.getElementById('videoTitleInput').value.trim();
+    if (!title) { showToast('Enter title', 'error'); return; }
+    const formData = new FormData();
+    formData.append('file', selectedVideoFile);
+    formData.append('title', title);
+    formData.append('description', document.getElementById('videoDescriptionInput').value);
+    formData.append('preview', document.getElementById('videoPreview').checked);
+    const btn = document.getElementById('uploadVideoBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/content/upload-video`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+        const data = await response.json();
+        if (data.success) {
+            await fetchAPI(`/modules/${currentModuleIdForContent}/content`, { method: 'POST', body: JSON.stringify({ content_id: data.content.id }) });
+            showToast('Video added. Processing...');
+            closeModal('contentModal');
+            viewCourse(currentCourseId);
+        }
+    } catch (error) { showToast('Upload failed', 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = 'Upload Video & Add'; }
+});
+
+async function loadContentLibrary() {
+    document.getElementById('mainContainer').innerHTML = '<div class="loading-screen"><div class="spinner"></div><p>Loading library...</p></div>';
+    try {
+        const data = await fetchAPI('/content');
+        renderLibrary(data.contents || []);
+    } catch (error) {
+        document.getElementById('mainContainer').innerHTML = '<div class="empty-state"><i class="fas fa-database"></i><p>Failed to load</p><button class="btn-primary" onclick="loadContentLibrary()">Retry</button></div>';
+    }
+}
+
+function renderLibrary(contents) {
+    const container = document.getElementById('mainContainer');
+    container.innerHTML = `<div class="page-header"><h1 class="page-title">Content Library</h1><p class="page-subtitle">All available content</p></div><div class="courses-grid" id="libraryGrid"></div>`;
+    const grid = document.getElementById('libraryGrid');
+    if (contents.length === 0) grid.innerHTML = '<div class="empty-state"><i class="fas fa-database"></i><p>No content uploaded yet</p></div>';
+    else grid.innerHTML = contents.map(c => `
+        <div class="course-card" style="cursor:default">
+            <div class="course-thumb" style="font-size:32px"><i class="fas ${c.content_type === 'video' ? 'fa-video' : 'fa-file-pdf'}"></i>${c.preview ? '<span class="preview-badge" style="top:12px;right:12px;">PREVIEW</span>' : ''}</div>
+            <div class="course-body">
+                <div class="course-title">${escapeHtml(c.title)}</div>
+                <div class="course-desc">${escapeHtml(c.description || 'No description')}</div>
+                <div class="course-footer"><span>${formatSize(c.file_size_bytes)}</span><button class="btn-secondary" onclick="${c.content_type === 'video' ? `previewVideo('${c.id}', '${escapeHtml(c.title)}')` : `previewPDF('${c.id}', '${escapeHtml(c.title)}')`}">Preview</button></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function switchView(view) {
+    const btns = document.querySelectorAll('.nav-btn');
+    btns.forEach(btn => btn.classList.remove('active'));
+    if (view === 'courses') { btns[0].classList.add('active'); loadCourses(); }
+    else if (view === 'library') { btns[1].classList.add('active'); loadContentLibrary(); }
+    else if (view === 'my-courses') { btns[2].classList.add('active'); loadMyCourses(); }
+}
+</script>
+</body>
+</html>
