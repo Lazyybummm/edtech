@@ -1,0 +1,54 @@
+@import url('[https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap)');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #F4DFD8;
+    --color-card: #FFFFFF;
+    --color-orange: #F26B4D;
+    --color-blue: #87CEFA;
+    --color-yellow: #F9E076;
+    --color-black: #111111;
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-black);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .brutal-border { border: 3px solid var(--color-black); }
+  .brutal-shadow { box-shadow: 4px 4px 0px 0px var(--color-black); }
+  .brutal-shadow-lg { box-shadow: 8px 8px 0px 0px var(--color-black); }
+  
+  .brutal-input {
+    @apply border-[3px] border-black transition-all duration-200;
+  }
+  .brutal-input:focus {
+    @apply outline-none shadow-[4px_4px_0px_0px_#F26B4D] -translate-x-[2px] -translate-y-[2px];
+  }
+  
+  .animate-float-icon { animation: float-icon 6s ease-in-out infinite; }
+}
+
+@keyframes float-icon {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(10deg); }
+}
+
+/* Smooth reveal for modules */
+.module-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease-out;
+}
+.module-content.open {
+  grid-template-rows: 1fr;
+}
+.module-inner {
+  overflow: hidden;
+}
