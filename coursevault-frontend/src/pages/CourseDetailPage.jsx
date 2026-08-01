@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, Plus, Edit, Trash2, Users } from 'lucide-react';
+import { Play, Plus, Edit, Trash2, Users, Infinity as InfinityIcon } from 'lucide-react';
 import Badge from '../components/ui/Badge.jsx';
 import CourseAccordion from '../components/course/CourseAccordion.jsx';
 import MediaViewerModal from '../components/course/MediaViewerModal.jsx';
@@ -38,6 +38,9 @@ export default function CourseDetailPage() {
   // 🌟 PROGRESS TRACKING
   const [completedContentIds, setCompletedContentIds] = useState(new Set());
   const [courseProgress, setCourseProgress] = useState(0);
+  const [accessExpiresAt, setAccessExpiresAt] = useState(null);
+  // Which course the access belongs to — often the parent class, not this page.
+  const [accessCourseId, setAccessCourseId] = useState(null);
 
   const isCreator = user?.role === 'educator' && (course?.isCreator || user?.id === course?.educator_id);
   const canAccessContent = isCreator || isEnrolled;
@@ -67,16 +70,17 @@ export default function CourseDetailPage() {
       setCourse(data.course);
       setModules(data.modules || []);
 
-      if (data.modules?.length > 0 && expandedModules.length === 0) {
-        setExpandedModules([data.modules[0].id]);
-      }
+      // Modules start collapsed. Auto-opening the first one pushed the rest of
+      // the curriculum off the screen before the student had seen what the
+      // course contained — worst on a phone, where one open module can fill
+      // the whole viewport.
 
       const enrolled = user?.role === 'educator' ? true : !!data.course.isEnrolled;
       setIsEnrolled(enrolled);
 
       // 🌟 FIX: same stale-gate issue as onContentClick — always attempt to
       // load progress and let the backend's own checks decide what comes back.
-      loadProgress(data.course.id);
+      loadProgress(data.course);
 
     } catch (err) {
       console.error(err);
@@ -87,7 +91,8 @@ export default function CourseDetailPage() {
 
   // 🌟 PROGRESS TRACKING: bulk-fetch completed content ids + reuse the
   // enrollments endpoint's already-computed percentage for the header bar.
-  const loadProgress = async (courseId) => {
+  const loadProgress = async (courseRecord) => {
+    const courseId = courseRecord?.id || courseRecord;
     try {
       const [progressData, enrollmentsData] = await Promise.all([
         fetchAPI(`/video/progress/course/${courseId}`),
@@ -96,8 +101,25 @@ export default function CourseDetailPage() {
 
       setCompletedContentIds(new Set(progressData.completedContentIds || []));
 
-      const mine = (enrollmentsData.enrollments || []).find(e => e.course_id === courseId);
+      const all = enrollmentsData.enrollments || [];
+
+      /*
+       * Fall back to the parent class's enrolment.
+       *
+       * Students buy a class and study its subjects, so on a subject page there
+       * is no enrolment row for this course id — the access (and its expiry)
+       * belongs to the parent. Looking only at this id would show no countdown
+       * on exactly the pages where students spend their time.
+       */
+      const mine =
+        all.find((e) => e.course_id === courseId) ||
+        (courseRecord?.parent_course_id
+          ? all.find((e) => e.course_id === courseRecord.parent_course_id)
+          : null);
+
       setCourseProgress(mine ? mine.progress : 0);
+      setAccessExpiresAt(mine?.expires_at || null);
+      setAccessCourseId(mine?.course_id || null);
     } catch (err) {
       console.error('Failed to load progress', err);
     }
@@ -127,12 +149,23 @@ export default function CourseDetailPage() {
     }
   };
 
-  const handleEnroll = async () => {
+  /**
+   * @param {string} [targetCourseId]
+   *   The course to buy. Defaults to this page's course, but renewing passes
+   *   the course the *enrolment* belongs to — students buy a class and study
+   *   its subjects, so on a subject page the lapsed enrolment is the parent's.
+   *   Without this, Renew silently bought a different course and left the
+   *   expired one untouched, so access never came back.
+   */
+  const handleEnroll = async (targetCourseId) => {
+    const buyCourseId =
+      typeof targetCourseId === 'string' ? targetCourseId : course.id;
+
     setIsEnrolling(true);
     try {
       const orderData = await fetchAPI('/payments/create-order', {
         method: 'POST',
-        body: JSON.stringify({ courseId: course.id })
+        body: JSON.stringify({ courseId: buyCourseId })
       });
 
       if (orderData.isFree) {
@@ -161,7 +194,7 @@ export default function CourseDetailPage() {
                 orderId: response.razorpay_order_id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
-                courseId: course.id
+                courseId: buyCourseId
               })
             });
 
@@ -221,10 +254,10 @@ export default function CourseDetailPage() {
         <span className="hidden md:inline">← Back</span>
       </button>
 
-      <div className="relative mb-6 md:mb-12">
-        <div className="absolute inset-0 bg-[#111] rounded-2xl md:rounded-[24px] translate-x-2 translate-y-2 md:translate-x-3 md:translate-y-3 z-0"></div>
-        <div className={`relative z-10 ${getBgColor(course.id)} border-2 border-black rounded-2xl md:rounded-[24px] p-5 md:p-12 shadow-[4px_4px_0px_0px_#111]`}>
-          <div className="flex justify-between items-start gap-2 mb-3 md:mb-6">
+      <div className="relative mb-4 md:mb-12">
+        <div className="absolute inset-0 bg-[#111] rounded-2xl md:rounded-[24px] translate-x-1.5 translate-y-1.5 md:translate-x-3 md:translate-y-3 z-0"></div>
+        <div className={`relative z-10 ${getBgColor(course.id)} border-2 border-black rounded-2xl md:rounded-[24px] p-3.5 md:p-12 shadow-[3px_3px_0px_0px_#111] md:shadow-[4px_4px_0px_0px_#111]`}>
+          <div className="flex justify-between items-start gap-2 mb-2 md:mb-6">
             <Badge colorClass="bg-white">{course.category || 'General'}</Badge>
             <div className="flex items-center gap-2 shrink-0">
               {isCreator && <Badge colorClass="bg-[#F9E076]">Creator View</Badge>}
@@ -242,8 +275,12 @@ export default function CourseDetailPage() {
               )}
             </div>
           </div>
-          <h1 className="text-2xl md:text-6xl font-black mb-2 md:mb-4">{course.title}</h1>
-          <p className="text-sm md:text-lg font-bold text-black/70 mb-4 md:mb-8 max-w-2xl">{course.description}</p>
+          <h1 className="text-xl md:text-6xl font-black leading-tight mb-1 md:mb-4">{course.title}</h1>
+          {course.description?.trim() && (
+            <p className="text-xs md:text-lg font-bold text-black/70 mb-3 md:mb-8 max-w-2xl line-clamp-3 md:line-clamp-none">
+              {course.description}
+            </p>
+          )}
 
           {/*
             A 2-up grid on mobile, inline row from md.
@@ -297,7 +334,7 @@ export default function CourseDetailPage() {
               <button
                 onClick={isEnrolled ? () => { } : handleEnroll}
                 disabled={isEnrolling}
-                className={`col-span-2 md:col-span-1 h-12 w-full md:w-auto md:px-10 flex items-center justify-center px-4 text-sm md:text-base font-bold border-2 border-black rounded-xl md:rounded-full bg-[#A7E2D1] shadow-[3px_3px_0px_0px_#111] transition-all ${
+                className={`col-span-2 md:col-span-1 h-10 md:h-12 w-full md:w-auto md:px-10 flex items-center justify-center px-4 text-sm md:text-base font-bold border-2 border-black rounded-xl md:rounded-full bg-[#A7E2D1] shadow-[3px_3px_0px_0px_#111] transition-all ${
                   isEnrolling
                     ? 'opacity-50 cursor-not-allowed'
                     : 'hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_#111]'
@@ -310,8 +347,72 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-8 gap-6">
-        <h2 className="text-3xl font-black">Curriculum</h2>
+      {/*
+        Remaining access, shown where the student is actually working rather
+        than only back on My Learning. Placed above the curriculum so it is
+        read before they start, not discovered when something stops opening.
+      */}
+      {/*
+        Not gated on isEnrolled.
+
+        Once access lapses the server correctly reports isEnrolled as false, so
+        gating this on it would hide the banner at the exact moment it matters —
+        the student would just find the enrol button back with no explanation of
+        why they lost access. accessExpiresAt still arrives because the
+        enrolments list deliberately keeps lapsed rows.
+      */}
+      {!isCreator && (isEnrolled || accessExpiresAt) && (() => {
+        // Lifetime access gets its own line rather than an absent one.
+        if (!accessExpiresAt) {
+          return (
+            <div className="flex items-center gap-2 mb-4 md:mb-6 px-3 py-2.5 md:px-4 md:py-3 border-2 border-black rounded-xl font-bold bg-[#A7E2D1] shadow-[3px_3px_0px_0px_#111]">
+              <InfinityIcon size={16} strokeWidth={3} className="shrink-0" />
+              <span className="text-xs md:text-sm">Lifetime access — this course never expires.</span>
+            </div>
+          );
+        }
+
+        const expires = new Date(accessExpiresAt);
+        const msLeft = expires - new Date();
+        const daysLeft = Math.ceil(msLeft / 86400000);
+        const expired = msLeft <= 0;
+
+        // Days are the useful unit near the end; months read better far out.
+        const remaining =
+          daysLeft > 60
+            ? `${Math.round(daysLeft / 30)} months left`
+            : `${daysLeft} day${daysLeft === 1 ? '' : 's'} left`;
+
+        return (
+          <div
+            className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 md:mb-6 px-3 py-2.5 md:px-4 md:py-3 border-2 border-black rounded-xl font-bold shadow-[3px_3px_0px_0px_#111] ${
+              expired
+                ? 'bg-[#F26B4D] text-white'
+                : daysLeft <= 14
+                ? 'bg-[#F9E076]'
+                : 'bg-white'
+            }`}
+          >
+            <span className="text-xs md:text-sm">
+              {expired
+                ? `Your access ended on ${expires.toLocaleDateString()}. Re-enrol to continue — your progress is kept.`
+                : `${remaining} — access until ${expires.toLocaleDateString()}.`}
+            </span>
+            {expired && (
+              <button
+                onClick={() => handleEnroll(accessCourseId || course.id)}
+                disabled={isEnrolling}
+                className="shrink-0 h-9 px-4 bg-white text-black border-2 border-black rounded-lg text-sm font-bold hover:bg-[#F9E076] transition-colors disabled:opacity-60"
+              >
+                {isEnrolling ? 'Processing...' : 'Renew access'}
+              </button>
+            )}
+          </div>
+        );
+      })()}
+
+      <div className="flex items-center justify-between mb-4 md:mb-8 gap-3 md:gap-6">
+        <h2 className="text-2xl md:text-3xl font-black shrink-0">Curriculum</h2>
 
         {isEnrolled && !isCreator && (
           <div className="flex items-center gap-3 flex-1 max-w-sm">
